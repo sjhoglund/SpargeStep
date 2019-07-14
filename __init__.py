@@ -75,7 +75,7 @@ class SpargeStep(StepBase):
                     self.actor_off(int(self.actor2))
         
         if float(sensorValue1) >= float(volumeBoil):
-            self.set_target_temp(init(self.temp), self.kettle1)
+            self.set_target_temp(self.temp, self.kettle1)
         
         # Check if kettle1 target volume has been reached
         if float(sensorValue1) >= float(self.volume1):
