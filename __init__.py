@@ -22,7 +22,7 @@ class SpargeStep(StepBase):
     volumeDiff = Property.Number("Volume Difference", configurable=True)
     timer = Property.Number("Timer in Minutes", configurable=True)
     temp = Property.Number("BK Temp", configurable=True)
-    volumeBoil = Property.Number("BK Boil Volume")
+    volumeBoil = Property.Number("BK Boil Volume", configurable=True)
 
     def init(self):
         '''
