@@ -21,6 +21,8 @@ class SpargeStep(StepBase):
     volumeStart = Property.Number("HLT Volume Start", configurable=True)
     volumeDiff = Property.Number("Volume Difference", configurable=True)
     timer = Property.Number("Timer in Minutes", configurable=True)
+    temp = Property.Number("BK Temp", configurable=True)
+    volumeBoil = Property.Number("BK Boil Volume")
 
     def init(self):
         '''
@@ -31,7 +33,7 @@ class SpargeStep(StepBase):
         #self.set_target_temp(self.temp, self.kettle)
 
     def finish(self):
-        self.set_target_temp(0, self.kettle)
+        self.set_target_temp(0, self.kettle2)
 
     def execute(self):
         '''
@@ -72,8 +74,13 @@ class SpargeStep(StepBase):
                 if abs(float(volumeFlow)) >= float(self.volumeDiff):
                     self.actor_off(int(self.actor2))
         
+        if float(sensorValue1) >= float(volumeBoil):
+            self.set_target_temp(init(self.temp), self.kettle1)
+        
         # Check if kettle1 target volume has been reached
         if float(sensorValue1) >= float(self.volume1):
             self.set_target_temp(0, self.kettle2)
+            self.stop_timer()
+            self.start_timer(0)
             self.notify("Sparge Complete!", "Starting the next step.", timeout=None)
             self.next()
