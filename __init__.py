@@ -38,10 +38,10 @@ class SpargeStep(StepBase):
         This method is execute in an interval
         :return: 
         '''
-        sensorValue1 = float(cbpi.get_sensor_value(int(self.sensor1)))
-        sensorValue2 = float(cbpi.get_sensor_value(int(self.sensor2)))
-        volumeChange = sensorValue2 - float(self.volumeStart)
-        volumeFlow = sensorValue1 - float(volumeChange)
+        sensorValue1 = cbpi.get_sensor_value(int(self.sensor1))
+        sensorValue2 = cbpi.get_sensor_value(int(self.sensor2))
+        volumeChange = float(sensorValue2) - float(self.volumeStart)
+        volumeFlow = float(sensorValue1) - float(volumeChange)
         
         for key, value in cbpi.cache["actors"].iteritems():
             if key == int(self.actor1):
@@ -62,18 +62,18 @@ class SpargeStep(StepBase):
                 else:
                     self.actor_on(int(self.actor2))
         else:
-            if volumeFlow >= 0:
-                if volumeFlow < float(self.volumeDiff):
+            if float(volumeFlow) >= 0:
+                if float(volumeFlow) < float(self.volumeDiff):
                     self.actor_on(int(self.actor1))
                     self.actor_on(int(self.actor2))
                 else:
                     self.actor_off(int(self.actor1))
             else:
-                if abs(volumeFlow) >= float(self.volumeDiff):
+                if abs(float(volumeFlow)) >= float(self.volumeDiff):
                     self.actor_off(int(self.actor2))
         
         # Check if kettle1 target volume has been reached
-        if sensorValue1 >= float(self.volume1):
+        if float(sensorValue1) >= float(self.volume1):
             self.set_target_temp(0, self.kettle2)
             self.notify("Sparge Complete!", "Starting the next step.", timeout=None)
             self.next()
