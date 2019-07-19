@@ -52,6 +52,8 @@ class SpargeStep(StepBase):
                 actorState2 = value.state
                 
         if float(sensorValue1) >= float(self.volumeBoil):
+            Kettle2View().toggle(int(self.kettle1))
+            self.notify("Kettle Update", "Auto is on.", timeout=None)
             self.set_target_temp(self.temp, self.kettle1)
                 
         # Check if kettle2 volume limit reached
