@@ -1,5 +1,7 @@
 import time
 
+from modules.kettle import *
+
 from modules.core.props import Property, StepProperty
 from modules.core.step import StepBase
 from modules import cbpi
@@ -23,6 +25,9 @@ class SpargeStep(StepBase):
     timer = Property.Number("Timer in Minutes", configurable=True)
     temp = Property.Number("BK Temp", configurable=True)
     volumeBoil = Property.Number("BK Boil Volume", configurable=True)
+    
+    volumeState1 = 0
+    volumeState2 = 0
 
     def init(self):
         '''
@@ -42,8 +47,8 @@ class SpargeStep(StepBase):
         '''
         sensorValue1 = cbpi.get_sensor_value(int(self.sensor1))
         sensorValue2 = cbpi.get_sensor_value(int(self.sensor2))
-        volumeChange = float(self.volumeStart) - float(sensorValue2)
-        volumeFlow = float(sensorValue1) - float(volumeChange)
+        volumeChange1 = float(sensorValue1) - float(self.volumeState1)
+        volumeChange2 = float(self.volumeState2) - float(sensorValue2)
         
         for key, value in cbpi.cache["actors"].iteritems():
             if key == int(self.actor1):
@@ -59,6 +64,7 @@ class SpargeStep(StepBase):
         # Check if kettle2 volume limit reached
         if float(sensorValue2) <= float(self.volume2):
             self.set_target_temp(0, self.kettle2)
+            Kettle2View().toggle(int(self.kettle2))
             if self.is_timer_finished() is None:
                 self.start_timer(int(self.timer) * 60)
             # Make sure kettle1 hasn't reached target
@@ -69,15 +75,24 @@ class SpargeStep(StepBase):
                 else:
                     self.actor_on(int(self.actor2))
         else:
-            if float(volumeFlow) >= 0:
-                if float(volumeFlow) < float(self.volumeDiff):
-                    self.actor_on(int(self.actor1))
-                    self.actor_on(int(self.actor2))
+            if self.volumeState1 > 0:
+                totalDiff = float(volumeChange2) - float(volumeChange1)
+                if totalDiff > 0:
+                    if abs(totalDiff) > float(self.volumeDiff):
+                        self.actor_off(int(self.actor2))
+                        self.actor_on(int(self.actor1))
+                    else:
+                        self.actor_on(int(self.actor2))
                 else:
-                    self.actor_off(int(self.actor1))
+                    if abs(totalDiff) > float(self.volumeDiff):
+                        self.actor_off(int(self.actor1))
+                        self.actor_on(int(self.actor2))
+                    else:
+                        self.actor_on(int(self.actor1))
             else:
-                if abs(float(volumeFlow)) >= float(self.volumeDiff):
-                    self.actor_off(int(self.actor2))
+                if volumeChange >= 10:
+                    self.volumeState2 = sensorValue2
+                    self.volumeState1 = sensorValue1
         
         # Check if kettle1 target volume has been reached
         if float(sensorValue1) >= float(self.volume1):
