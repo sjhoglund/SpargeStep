@@ -42,7 +42,7 @@ class SpargeStep(StepBase):
         '''
         sensorValue1 = cbpi.get_sensor_value(int(self.sensor1))
         sensorValue2 = cbpi.get_sensor_value(int(self.sensor2))
-        volumeChange = float(sensorValue2) - float(self.volumeStart)
+        volumeChange = float(self.volumeStart) - float(sensorValue2)
         volumeFlow = float(sensorValue1) - float(volumeChange)
         
         for key, value in cbpi.cache["actors"].iteritems():
