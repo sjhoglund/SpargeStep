@@ -49,6 +49,8 @@ class SpargeStep(StepBase):
         sensorValue2 = cbpi.get_sensor_value(int(self.sensor2))
         volumeChange1 = float(sensorValue1) - float(self.volumeState1)
         volumeChange2 = float(self.volumeState2) - float(sensorValue2)
+        kettle1_state = cbpi.cache.get("kettle")[int(self.kettle1)].state
+        kettle2_state = cbpi.cache.get("kettle")[int(self.kettle2)].state
         
         for key, value in cbpi.cache["actors"].iteritems():
             if key == int(self.actor1):
@@ -56,15 +58,17 @@ class SpargeStep(StepBase):
             if key == int(self.actor2):
                 actorState2 = value.state
                 
-        if float(sensorValue1) >= float(self.volumeBoil):
+        if float(sensorValue1) >= float(self.volumeBoil) and kettle1_state is False:
             Kettle2View().toggle(int(self.kettle1))
-            self.notify("Kettle Update", "Auto is on.", timeout=None)
+            self.notify("Kettle Update", "Kettle 1 Auto is on.", timeout=None)
             self.set_target_temp(self.temp, self.kettle1)
                 
         # Check if kettle2 volume limit reached
         if float(sensorValue2) <= float(self.volume2):
-            self.set_target_temp(0, self.kettle2)
-            Kettle2View().toggle(int(self.kettle2))
+            if kettle2_state is True:
+                self.set_target_temp(0, self.kettle2)
+                Kettle2View().toggle(int(self.kettle2))
+                self.notify("Kettle Update", "Kettle 2 Auto is off.", timeout=None)
             if self.is_timer_finished() is None:
                 self.start_timer(int(self.timer) * 60)
             # Make sure kettle1 hasn't reached target
